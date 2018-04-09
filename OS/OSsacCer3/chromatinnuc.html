@@ -1,0 +1,17 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<script src="http://dna.engr.latech.edu/icm-du/jmol/Jmol.js" type="text/javascript">
+</script>
+<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">
+<title>Free DNA</title>
+</head>
+<body>
+<script>
+jmolInitialize("http://dna.engr.latech.edu/icm-du/jmol"); // REQUIRED
+jmolApplet(["100%","90%"], value = "load tmpdata/icmfree.occ.xyz; spin off; script ../../SRC/jsmol/nuc-cores.txt");
+jmolBr(); // a button
+//jmolButton("reset", "Reset to original orientation");
+</script>
+</body>
+</html>
