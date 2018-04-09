@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript" src="SRC/javascript/jquery-1.10.2.min.js"></script>
+</head>
+<body>
+<script language="javascript" type="text/javascript">
+	var serverurl = window.location.href;
+	serverurl = serverurl.substring(0, serverurl.lastIndexOf('/'));
+	posting = $.post("SRC/jason/sessionsacCer3.php");	
+	posting.done(function(data){
+	var n = data.length;
+	var sessionpage = serverurl.substring(0, serverurl.lastIndexOf('sessions'));
+	sessionpage = sessionpage + "sessions/" + parseInt(data) +"/icmgb-dna.html"
+	location.replace(sessionpage);
+	})
+</script>
+
+</body>
+</html>

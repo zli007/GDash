@@ -1,0 +1,103 @@
+#####################################################
+### TcB ICM minimization protocl V4
+###   LaTech April 2014
+#####################################################
+
+### notes from 
+####    5KT/A^2 harmonic constraints to maintain nucleosome
+####    
+
+# VARIABLES
+variable simname index icm.occ
+ 
+##############
+# Initialization
+##############
+units		real
+###   mass = g/mol ; distance = A ;  time = fs ; energy = kcal/mol
+####   so kT = 0.593kcal-mol
+boundary	f f f
+atom_style	full
+log 		${simname}.log
+
+##see http://lammps.sandia.gov/doc/2001/data_format.html
+read_data	${simname}.lmp
+
+	
+### neighbor is skin style
+###  skin is the distance beyond cutoff in angs if real
+neighbor        100 bin
+neigh_modify    every  10
+
+
+##############
+### BONDS
+##  http://lammps.sandia.gov/doc/bond_harmonic.html
+##   E = K (r-ro)^2
+##   K (energy/distance^2) and ro (distance)
+###   kT = .593kcal/mol
+##############
+bond_style      harmonic
+bond_coeff      1 5.93 3.33  ## dna-dna
+bond_coeff      2 59.3 43.0  ### oct-dna
+bond_coeff      3 59.3 25.0  ###  dna-dna in gyres
+
+
+##############
+### ANGLES
+###  http://lammps.sandia.gov/doc/angle_harmonic.html
+###  E = K (theta - theta0)^2
+##   K (energy/radian^2) and theta0 (degress)
+###   kT = .593kcal/mol
+##############
+angle_style     harmonic
+angle_coeff     1 74.125 180.  ### bending stiffness of DNA
+
+
+############
+##  Pair Interactions
+# see http://lammps.sandia.gov/doc/pair_lj.html
+#     http://lammps.sandia.gov/doc/pair_style.html
+#     http://lammps.sandia.gov/doc/special_bonds.html
+############
+
+dielectric 80.0 
+
+
+##  E= A(1+ cos(Pi r/rc))
+### type 1 = linker DNA 
+###  type 2 = nucleosomal DNA
+#### type 3 = octamer core
+pair_style soft 120
+pair_coeff 1 1   100    9.9 ##  DNA-DNA in linker (stacking 3.3*3 = 9.9)
+pair_coeff 2 2   0    2  #  DNA-DNA in nucleosome its the gyres
+pair_coeff 1 3   100    65   # Linker-Octasome (5.5+1 = 6.5)
+pair_coeff 3 3   100    110   # Oct-Oct (5.5 + 5.5 = 11)
+
+group octamer type 3 2
+group dna     type 1
+
+
+#compute thermo_pe all pe 
+compute molPE all pe bond angle dihedral improper 
+
+## #output only
+thermo 10
+thermo_style multi
+
+
+#dump 
+dump            1 all custom 10 ${simname}.lammpstrj  element x y z
+dump_modify 1 sort id
+
+
+#velocity 	all create 300.0 1231
+
+### MINIMIZATION
+###  http://lammps.sandia.gov/doc/minimize.html
+###minimize etol ftol maxiter maxeval 
+
+minimize 1e-6 1e-8 1000 10000 
+min_modify dmax 5.0
+minimize 1e-6 1e-8  5000 10000
+

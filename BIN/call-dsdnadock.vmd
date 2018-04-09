@@ -1,0 +1,103 @@
+##############
+###RS Tcblab
+##This script is used to call the dsdnadock.vmd to make a new system with a loaded nucleosome structure with a double strained DNA and a new DNA seq
+##TO use this one, please use the command vmd -parm7 some.parm -rst7 some.crd -e call-dsdnadock.vmd -args seq.in position frame
+##The input sequence must be longer than the one you want to replace.
+##############
+
+
+puts " argc $argc "
+if { $argc < 1  } { 
+  puts " \n \n USAGE ERROR:  " 
+  puts " \n\n usage: vmd -parm7 some.parm -rst7 some.crd -e call-dsdnadock.vmd -args seq.in  \n\n" ; 
+  puts "  \t  some.\[parm,crd\] and some.\[psf,pdb\] are loaded so that VMD can interp the dcds "  ;
+  puts "  \t      replaces the dsDNA in the structure with a new dsDNA with sequence = seq " ;
+  puts "  \t      the structure in some.crd is mapped to pos of the seq at frame number frame";  
+  puts "  \t  " ;
+  puts "  \n \n" ; 
+  
+}
+
+source ../../../BIN/dsdnadock.vmd
+source ../../../BIN/nucleosomes.vmd
+set sequence [lindex $argv 0]
+
+
+puts "****************************"
+puts "   Start checking DNA Seq   "
+puts "****************************"
+
+
+###check the DNA sequence
+set fn   [open $sequence "r" ]
+set seq  [lrange [gets $fn] 0 end ]
+set nseq [string length $seq ]
+set nuc  [atomselect top "nucleic"]
+set nfrag [atomselect top "nfrag 0" ]
+set nucid [lsort -uniq -integer [$nfrag get resid] ]
+set lnuc [llength $nucid]
+if { $nseq != $lnuc } {
+puts "XXXXXXXXXXXXXXXXXXXXXXXX"
+puts "XXXXXXXXXXXXXXXXXXXXXXXX"
+puts "USAGE ERROR"
+puts "New seq has $nseq bp"
+puts "Original seq has $lnuc bp"
+puts "New seq must be the same as original seq"
+puts "XXXXXXXXXXXXXXXXXXXXXXXX"
+sleep 2
+quit
+}
+
+###check the nulceic is ds or not
+set nlist [lsort -unique [ $nuc get nfrag ]  ]
+set nnfrag [llength $nlist]
+if {$nnfrag != 2} {
+puts "XXXXXXXXXXXXXXXXXXXXXXXX"
+puts "XXXXXXXXXXXXXXXXXXXXXXXX"
+puts "USAGE ERROR"
+puts "The structure loaded has $nnfrag strains"
+puts "This script only works on double strained DNA"
+puts "XXXXXXXXXXXXXXXXXXXXXXXX"
+sleep 2
+quit
+}
+
+###check the length of nfrags
+set nfrag0 [atomselect top "nfrag 0"]
+set nfrag1 [atomselect top "nfrag 1"]
+set resid0 [lsort -uniq -integer [$nfrag0 get resid] ]
+set resid1 [lsort -uniq -integer [$nfrag1 get resid] ]
+set lnuc0  [llength $resid0]
+set lnuc1  [llength $resid1]
+if {$lnuc0 != $lnuc1} {
+puts "XXXXXXXXXXXXXXXXXXXXXXXX"
+puts "XXXXXXXXXXXXXXXXXXXXXXXX"
+puts "USAGE ERROR"
+puts "One strain has $lnuc0 bp"
+puts "Another strain has $lnuc1 bp"
+puts "The length of each strain of DNA are not the same"
+puts "XXXXXXXXXXXXXXXXXXXXXXXX"
+sleep 2
+quit
+}
+ 
+puts "****************************"
+puts "     Finish checking        "
+puts "    Everythis is good to go "
+puts "****************************"
+
+###start dsdnadock.vmd
+pdb2par nucleic
+seq2par $sequence "bp_step.par" 
+par2pdb "hp.par" "nuc.pdb"
+fitchrom2nuc "nuc.pdb" 0 1
+separate 0 
+runtleap
+
+##puts "load the new system"
+##mol new vac.parm type {parm7} first 0 last -1 waitfor 1
+##set thismol [molinfo top]
+##mol addfile vac.crd type {rst7} first 0 last -1 step 1 waitfor 1 $thismol
+##source nucleosomes.vmd 
+
+quit

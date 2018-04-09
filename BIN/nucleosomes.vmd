@@ -1,0 +1,131 @@
+###   Bishop@LaTech.edu   July 2015
+### This VMD script defines selections for histones and DNA
+###
+### for the HISTONES  this script defines
+###       segnames H3[1,2], H2A[1,2], H2B[1,2], H4 are defined
+###       beta values are set to 1 for the core and 0 for the tails  
+###       atoms selections H3[1,2], H2A[1,2], H2B[1,2], H4 are defined s.t. $H31 selects H31
+###	  
+### for the DNA this script defines arrays of Watson-Crick base pairs
+###       segname W and C are the watson and crick strands
+###       beta values are set from 1 to nbp for the matching W and C  pairs
+###       atoms selections bp[id] gives the pair for id
+### 
+### ions are also labelled
+
+
+######################## HISTONE SELECTIONS ##########################
+
+
+set H3seq {sequence "ARTKQTARKSTGGKAPRKQLATKAARKSAPATGGVKKP.RYRPGTVALREIRRYQKSTELLIRKLPFQRLVREIAQDFKTDLRFQSSAVMALQEA.EAYLVGLFEDTNLCAI.AKRVTIMPKDIQLARRIRGERA" }
+set H4seq   {sequence "SGRGKGGKGLGKGGAKR.RKVLRDNIQGITKPAIRRLARRGGVKRISGLIYEETRGVLKVFLENVIRDAVTYTE.AKRKTVTAMDVVYALKRQGRTLYGFGG" }
+set H2Aseq  {sequence "SGRGKQGGK.RAKAKTRSSRAGLQFPVGRV.RLLRKGNY.ERVGAGAPVYLAAVLEYLTAEILELAGNAARDNKKTRIIPR.LQLA.RNDEELNKLLG.VTIAQGGVLPNIQ.VLLPKKTES....K.K" }
+set H2Bseq  { sequence "PEPAKSAPAPKKGSKKAVTK.QKKDGKKR...RKESY..YVYKVLKQV.PDTGISSKAM.IMNSFVND.FERIA.EASRLA.YNKRSTITSREIQTAVRLLLPGELAK.AVSEGTKAVTKYTSAK" }
+
+set H3Coreseq {sequence "TVALREIRRYQKSTELLIRKLPFQRLVREIAQDFKTDLRFQSSAVMALQEA.EAYLV.LFEDTNLCAI.AKRVTIMPKDIQLARRIRGERA" }
+set H4Coreseq   {sequence "NIQGITKPAIRRLARRGGVKRISGLIYEETRGVLKVFLENVIRDAVTYTE.AKRKTVTAMDVVYALKRQGRTLYGFGG" }
+set H2ACoreseq  {sequence "VGRV.RLLRKGNY.ERVGAGAPVYLAAVLEYLTAEILELAGNAARDNKKTRIIPR.LQLA.RNDEELNKL" }
+set H2BCoreseq  { sequence "Y..YVYKVLKQV.PDTGISSKAM.IMNSFVND.FERIA.EASRLA.YNKRSTITSREIQTAVRLLLPGELAK.AVSEGTKAVTKYTSAK" }
+
+### initialize all values 
+set all [ atomselect top all ]
+$all set beta {-1}
+$all set segname {"XXXX"}
+
+##set up  H3 selections
+set H3core [atomselect top  $H3Coreseq ]
+set frags [ lsort -uniq [$H3core get pfrag ] ]
+set H31 [atomselect top " pfrag [lindex $frags 0 ] " ]
+set H32 [atomselect top " pfrag [lindex $frags 1 ] " ]
+
+$H31 set segname "H31"
+$H31 set beta { 0}   
+$H32 set segname "H32"
+$H32 set beta { 0}   
+$H3core set beta { 1 }  
+
+
+##setup  H4 selections
+set H4core [atomselect top  $H4Coreseq ]
+set frags [ lsort -uniq [$H4core get pfrag ] ]
+set H41 [atomselect top " pfrag [lindex $frags 0 ] " ]
+set H42 [atomselect top " pfrag [lindex $frags 1 ] " ]
+
+$H41 set segname "H41"
+$H41 set beta { 0}   
+$H42 set segname "H42"
+$H42 set beta { 0}   
+$H4core set beta { 1 }  
+
+
+##setup  H2A selections
+set H2Acore [atomselect top  $H2ACoreseq ]
+set frags [ lsort -uniq [$H2Acore get pfrag ] ]
+set H2A1 [atomselect top " pfrag [lindex $frags 0 ] " ]
+set H2A2 [atomselect top " pfrag [lindex $frags 1 ] " ]
+
+$H2A1 set segname "H2A1"
+$H2A1 set beta { 0}   
+$H2A2 set segname "H2A2"
+$H2A2 set beta { 0}   
+$H2Acore set beta { 1 }  
+
+
+##setup  H2B selections
+set H2Bcore [atomselect top  $H2BCoreseq ]
+set frags [ lsort -uniq [$H2Bcore get pfrag ] ]
+set H2B1 [atomselect top " pfrag [lindex $frags 0 ] " ]
+set H2B2 [atomselect top " pfrag [lindex $frags 1 ] " ]
+
+$H2B1 set segname "H2B1"
+$H2B1 set beta { 0}   
+$H2B2 set segname "H2B2"
+$H2B2 set beta { 0}   
+$H2Bcore set beta { 1 }  
+
+
+
+######################## NUCLEIC ACID SELECTIONS ##########################
+
+## this DNA selection criteria assumes the strands are orders 5' to 3'
+### and takes the first strand as watson and pairs it upn with the inverse of the second
+
+
+set DNAsel [atomselect top "nucleic" ]
+set DNAresidue [$DNAsel get {residue} ]
+
+set Wresidue [lsort -uniq  -integer  -increasing $DNAresidue]
+set Cresidue [lsort -uniq  -integer  -decreasing $DNAresidue]
+
+if {  [expr [llength $Wresidue] % 2 ] } { 
+	puts "ERROR: nucleosomes.vmd" 
+	puts "ERROR: odd number bp in script nucleosomes.vmd" 
+	puts "ERROR: nucleosomes.vmd" 
+}
+if {  [expr [llength $Cresidue] % 2 ] } { 
+	puts "ERROR: nucleosomes.vmd" 
+	puts "ERROR: odd number bp in script nucleosomes.vmd" 
+	puts "ERROR: nucleosomes.vmd" 
+}
+
+set NumBP [expr [llength $Wresidue ] / 2  ]
+set  Wresidue [lrange $Wresidue 0 $NumBP-1 ]
+set  Cresidue [lrange $Cresidue 0 $NumBP-1 ]
+set Watson [atomselect top "nucleic and residue $Wresidue" ]
+set Crick [atomselect top "nucleic and residue $Cresidue" ]
+$Watson set segname "W"
+$Crick set segname "C"
+
+for { set bpcnt 1 } { $bpcnt <= $NumBP  } { incr bpcnt } {
+	set Wid [lindex $Wresidue $bpcnt-1 ]
+	set Cid [lindex $Cresidue $bpcnt-1 ]
+	set basepair($bpcnt) [atomselect top "nucleic and residue $Wid $Cid" ]
+	$basepair($bpcnt) set beta   $bpcnt 
+}
+
+
+######################## ION SELECTIONS ##########################
+
+set IONsel [atomselect top { name "Cl\-" "K\+" "Na\+" } ] 
+$IONsel set segname "ION"
+$IONsel  set beta 1

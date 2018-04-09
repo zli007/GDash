@@ -1,0 +1,10 @@
+select all
+cartoon only
+select A
+color cartoons red
+select T
+color cartoons blue
+select C
+color cartoons yellow
+select G
+color cartoons green

@@ -1,0 +1,38 @@
+hide all
+select oxygen
+var cores = {selected}
+ncores = cores.size
+scnt = 0
+for (var i = 1; i <= ncores; i = i + 1)
+   scnt = scnt + 1
+   draw ID @{"nuc" + scnt} DIAMETER 80.0  @{cores[i].xyz} COLOR deepskyblue
+end for
+
+select elemno=20
+var dna = {selected}
+ndna = dna.size
+
+scnt = scnt + 1
+i =1 
+draw ID @{"dna" + scnt} DIAMETER 20.0  @{dna[i].xyz}  COLOR green
+
+for (var i = 2; i <= ndna ; i = i + 1)
+   scnt = scnt + 1
+   draw ID @{"dna" + scnt} DIAMETER 20.0  @{dna[i].xyz}  COLOR yellow
+end for
+
+if(ndna < 2000)
+for (var i = 1; i <= ncores; i=i+1 ) 
+  for (var j = i + 1 ; j <= ncores; j=j+1) 
+      dis = cores[i].distance(cores[j])
+      if (dis < 100) {
+            print " core-core " + i + " " + j + " "+ dis
+            scnt = scnt + 1
+            draw ID @{"sphere" + scnt} DIAMETER 80.0  @{cores[i].xyz}  COLOR red
+            scnt = scnt + 1
+            draw ID @{"sphere" + scnt} DIAMETER 80.0  @{cores[j].xyz}  COLOR red
+	    j = ncores
+      }
+  end for 
+end for
+end if

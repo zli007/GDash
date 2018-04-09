@@ -1,0 +1,301 @@
+*, *:before, *:after {
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+html {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 100%;
+  background: #333;
+  color: #33383D;
+  -webkit-font-smoothing: antialiased;
+}
+
+.controls {
+    width: 1050px;
+    min-height: 100px;
+    background: #FFF;
+    margin: auto;
+    margin-top: 1rem;
+    margin-bottom: 0;
+    padding: 1.25rem;
+    /*border: solid 1px #ccc;*/
+    border-top: 5px solid #69c773;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.8);
+}
+
+.controls-noseam {
+    width: 1050px;
+    min-height: 100px;
+    background: #FFF;
+    margin: auto;
+    margin-top: 1rem;
+    background: #fff;
+}
+
+.container {
+  width: 1050px;
+  min-height: 300px;
+  position: relative;
+  margin: auto;
+  margin-top: 0;
+  overflow: auto; /*visible, hidden, scroll, auto*/
+  background: #eee;
+}
+
+.bar {
+  width: 1050px;
+  min-height: 10px;
+  position: relative;
+  margin: auto;
+  margin-top: 0;
+  background: #ccc;
+}
+
+#dalliance-1 {
+    position: relative;
+    width: 1024px;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    background: #aaa;
+}
+
+#svgoverlay {
+    position: absolute;
+    width: 1024px;
+    height: 30px;
+    top: 50px;
+    left: 0;
+    z-index: 100;
+    background: rgba(0,0,0,0);
+}
+
+
+#nucwidget {
+    position: relative;
+    width: 1024px;
+    height: 200px;
+    background: #eee;
+    margin: auto;
+    margin-top: 0;
+}
+
+.nucwidget rect {
+  fill: lightsteelblue;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+.nucwidget rect.dragging {
+  fill: red;
+  stroke: brown;
+}
+
+.nucwidget rect.selected {
+  fill: green;
+  stroke: darkgreen;
+}
+
+.JmolPanels{
+  width: 1024px;
+  height: 1000px;
+  margin: auto;
+  margin-top: 0;
+  overflow:hidden;
+  background-color:#eee;
+}
+
+.dropbtn {
+    ##background-color: #86b32d;
+    ##color: white;
+    ##padding: 6px;
+    ##font-size: 16px;
+    ##border: none;
+    ##cursor: pointer;
+    display: inline-block;
+    border-radius: 3px;
+    border: none;
+    font-size: 0.7rem;
+    padding: 0.3rem 0.5rem;
+    background: #86b32d;
+    border-bottom: 1px solid #5d7d1f;
+    color: white;
+    margin: 0.2rem 0.25rem;
+    text-align: center;
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 999;
+}
+
+.dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-content a:hover {background-color: #f1f1f1}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.dropdown:hover .dropbtn {
+    background-color: #3e8e41;
+}
+
+h1 {
+  margin: 0;
+}
+
+h2 {
+  margin-top: 0;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #999;
+}
+
+p {
+  font-size: 0.9rem;
+  margin: 0.5rem 0 1.5rem 0;
+}
+
+a,
+a:visited {
+  color: #08C;
+  text-decoration: none;
+}
+
+a:hover,
+a:focus {
+  color: #69c773;
+  cursor: pointer;
+}
+
+a.delete-file,
+a.delete-file:visited {
+  color: #CC0000;
+  margin-left: 0.5rem;
+}
+
+
+button {
+  display: inline-block;
+  border-radius: 3px;
+  border: none;
+  font-size: 0.7rem;
+  padding: 0.3rem 0.5rem;
+  background: #86b32d;
+  border-bottom: 1px solid #5d7d1f;
+  color: white;
+  margin: 0.2rem 0.25rem;
+  text-align: center;
+}
+
+
+button:hover {
+  opacity: 0.75;
+  cursor: pointer;
+}
+
+
+label {
+    padding: 0.6rem 1em;
+    /*color: white;*/
+    font-size: 0.9rem;
+    margin: 0 0.25rem;
+    text-align: center;
+}
+
+select {
+    font-size: 0.9rem;
+}
+
+
+/* Clearfix Utils */
+
+.clearfix {
+  *zoom: 1;
+}
+
+.clearfix:before,
+.clearfix:after {
+  display: table;
+  line-height: 0;
+  content: "";
+}
+
+.clearfix:after {
+  clear: both;
+}
+
+
+.tscaxis path, .tscaxis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.tscarea {
+  fill: lightsteelblue;
+}
+
+.tscline {
+  fill: none;
+  stroke: red;
+  stroke-width: 1.5px;
+}
+
+.tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 120px;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -60px;
+    opacity: 0;
+    transition: opacity 1s;
+}
+
+.tooltip .tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
+

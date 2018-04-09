@@ -1,0 +1,5 @@
+../../../DAT/X0/MD-B.par
+../../../DAT/X/01kx5.min.par
+../../../DAT/K/MD-B.dat
+seqin.txt
+E.dat

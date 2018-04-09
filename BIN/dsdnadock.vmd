@@ -1,0 +1,503 @@
+#####
+### RS LaTech 2017
+### ICM-GB version
+### This tool is for building a new nucleosome structure with a new DNA sequence
+### You must have a nucleosome structure with a double strained DNA and proteins, as well as the DNA sequence you want to build.
+### You have to load the structure first and source this script into vmd, then call up each procedure you want.
+### For further instruction, please go to dna.engr.latech.edu and go to Sun's web to find the instructure. 
+### Or you can find the instruction file in /autotmb/home/rsu007/public_html/dsdnadock-instructions
+#####
+
+proc check {sequence molid } {
+###check everything out to make sure
+###this script is working properly
+ 
+ ###check the DNA sequence
+ set fn   [open $sequence "r" ]
+ set seq  [lrange [gets $fn] 0 end ]
+ set nseq [string length $seq ]
+ set nuc  [atomselect $molid "nucleic"]
+ set nfrag [atomselect $molid "nfrag 0" ]
+ set nucid [lsort -uniq -integer [$nfrag get resid] ]
+ set lnuc [llength $nucid]
+ if { $nseq != $lnuc } {
+ puts "XXXXXXXXXXXXXXXXXXXXXXXX"
+ puts "XXXXXXXXXXXXXXXXXXXXXXXX"
+ puts "USAGE ERROR"
+ puts "New seq has $nseq bp"
+ puts "Original seq has $lnuc bp"
+ puts "New seq must be the same as original seq"
+ puts "XXXXXXXXXXXXXXXXXXXXXXXX"
+ sleep 2
+ quit
+ }
+ 
+ ###check the nulceic is ds or not
+ set nlist [lsort -unique [ $nuc get nfrag ]  ]
+ set nnfrag [llength $nlist]
+ if {$nnfrag != 2} {
+ puts "XXXXXXXXXXXXXXXXXXXXXXXX"
+ puts "XXXXXXXXXXXXXXXXXXXXXXXX"
+ puts "USAGE ERROR"
+ puts "The structure loaded has $nnfrag strains"
+ puts "This script only works on double strained DNA"
+ puts "XXXXXXXXXXXXXXXXXXXXXXXX"
+ sleep 2
+ quit
+ }
+ 
+ ###check the length of nfrags
+ set nfrag0 [atomselect $molid "nfrag 0"]
+ set nfrag1 [atomselect $molid "nfrag 1"]
+ set resid0 [lsort -uniq -integer [$nfrag0 get resid] ]
+ set resid1 [lsort -uniq -integer [$nfrag1 get resid] ]
+ set lnuc0  [llength $resid0]
+ set lnuc1  [llength $resid1]
+ if {$lnuc0 != $lnuc1} {
+ puts "XXXXXXXXXXXXXXXXXXXXXXXX"
+ puts "XXXXXXXXXXXXXXXXXXXXXXXX"
+ puts "USAGE ERROR"
+ puts "One strain has $lnuc0 bp"
+ puts "Another strain has $lnuc1 bp"
+ puts "The length of each strain of DNA are not the same"
+ puts "XXXXXXXXXXXXXXXXXXXXXXXX"
+ sleep 2
+ quit
+ }
+ 
+ puts "****************************"
+ puts "     Finish checking        "
+ puts "    Everythis is good to go "
+ puts "****************************"
+}
+
+proc pdb2par { dnasel } {
+### DONE TcB and verified Aug 26, 2015
+## converts a dsDNA structure identified by the 
+### selection in the top molecular  into a par file using 3DNA
+puts "****************************"
+puts "     starting pdb2par       "
+puts "****************************"
+
+set dnasel [atomselect top $dnasel ]
+set dnaresid [$dnasel get {residue} ]
+
+set Wresid [lsort -uniq  -integer  -increasing $dnaresid]
+set Cresid [lsort -uniq  -integer  -decreasing $dnaresid]
+
+if {  [expr [llength $Wresid] % 2 ] } { puts "ERROR: odd number bp " }
+if {  [expr [llength $Cresid] % 2 ] } { puts "ERROR: odd number bp " ; quit }
+
+set bpmax [expr [llength $Wresid ] / 2  ]
+set fp [open "tmp.in" w ]
+
+puts $fp "tmp.pdb"
+puts $fp "tmp.out"
+puts $fp "     2 #duplex "
+puts $fp " $bpmax # number of basepairs"
+puts $fp "     0 0  # expl bp numbering numbering / hetero atom"
+for { set bpcnt 1 } { $bpcnt <= $bpmax  } { incr bpcnt } {
+## puts $fp "[lindex $Wresid $bpcnt ] [lindex $Cresid $bpcnt ]"
+   puts $fp "   $bpcnt [expr $bpmax - $bpcnt + 1 ]"
+}
+close $fp
+
+$dnasel writepdb  tmp.pdb
+
+set X3DNA "/usr/local/X3DNA"
+set ::env(X3DNA) "$X3DNA"
+set ANAL "$X3DNA/bin/analyze"
+set COMMAND "$ANAL tmp.in > /dev/null"
+puts "executing: $COMMAND"
+set 3dnaoutput [ exec  $ANAL tmp.in 2> /dev/null ]
+puts "cleaning up"
+set rmoutput [ exec rm tmp.in tmp.pdb tmp.out auxiliary.par bp_helical.par cf_7methods.par hstacking.pdb stacking.pdb ref_frames.dat ]
+
+return  "created bp_step.par "
+puts "****************************"
+puts "     Finish pdb2par         "
+puts "     Created bp_step.par    "
+puts "****************************"
+}
+
+proc comp { tmp } {
+   switch $tmp {
+   A {set com "T" }
+   C {set com "G"}
+   G {set com "C"}
+   T {set com "A"} 
+   }
+  return $com
+}
+
+proc seq2par { sequence par } {
+### Still need to format the output file
+## TODO: THIS NEEDS PROPER VALIDATION and output formatting
+##  maps a set of DNA helix parameters onto a sequence and fills in any 
+##missing parameters with default/equilibrium values for the steps
+### use following ABC values
+puts "****************************"
+puts "     starting seq2par       "
+puts "****************************"
+
+##set intra("A-A")   " -0.06   -0.02   -0.03    0.14   -6.91    0.44"
+##set inter("A-A")   " -0.06   -0.03    3.17   -1.49    1.32   31.92"
+##set intra("A-C")   "  0.03   -0.02   -0.02   -1.43   -7.77    0.20"
+##set inter("A-C")   " -0.05    0.04    3.19    0.27    2.14   32.00"
+##set intra("A-G")   "  0.03   -0.02   -0.02   -1.43   -7.76    0.21"
+##set inter("A-G")   "  0.10   -0.25    3.22   -0.58    3.16   28.49"
+##set intra("A-T")   " -0.06   -0.02   -0.03    0.13   -6.91    0.43"
+##set inter("A-T")   " -0.00   -0.08    3.12    0.00    2.01   30.18"
+##set intra("C-A")   " -0.06   -0.02   -0.03    0.12   -6.92    0.42"
+##set inter("C-A")   "  0.02    0.25    3.12    0.21    9.19   27.86"
+##set intra("C-C")   "  0.03   -0.02   -0.02   -1.44   -7.79    0.20"
+##set inter("C-C")   "  0.15   -0.28    3.34    0.15    5.68   29.57"
+##set intra("C-G")   "  0.03   -0.02   -0.02   -1.42   -7.77    0.20"
+##set inter("C-G")   "  0.00    0.30    3.07    0.00    8.07   27.24"
+##set intra("C-T")   " -0.06   -0.02   -0.03    0.13   -6.90    0.42"
+##set inter("C-T")   " -0.10   -0.25    3.22   +0.58    3.15   28.50"
+##set intra("G-A")   " -0.06   -0.02   -0.03    0.13   -6.91    0.42"
+##set inter("G-A")   " -0.05    0.22    3.23   -0.30    3.72   32.99"
+##set intra("G-C")   "  0.03   -0.02   -0.02   -1.41   -7.76    0.20"
+##set inter("G-C")   " -0.00    0.24    3.23    0.00    1.65   34.74"
+##set intra("G-G")   "  0.03   -0.02   -0.02   -1.44   -7.76    0.21"
+##set inter("G-G")   " -0.15   -0.28    3.34   -0.16    5.68   29.57"
+##set intra("G-T")   " -0.06   -0.02   -0.03    0.13   -6.92    0.43"
+##set inter("G-T")   " +0.05    0.04    3.19   -0.27    2.13   32.00"
+##set intra("T-A")   " -0.06   -0.02   -0.03    0.13   -6.90    0.43"
+##set inter("T-A")   " -0.00    0.24    3.17    0.00   10.30   28.82"
+##set intra("T-C")   "  0.03   -0.02   -0.02   -1.43   -7.78    0.20"
+##set inter("T-C")   " +0.05    0.22    3.23    0.30    3.71   32.99"
+##set intra("T-G")   "  0.03   -0.02   -0.02   -1.42   -7.77    0.20"
+##set inter("T-G")   " -0.02    0.25    3.12   -0.21    9.19   27.85"
+##set intra("T-T")   " -0.06   -0.02   -0.03    0.11   -6.90    0.43"   
+##set inter("T-T")   " +0.06   -0.03    3.17   +1.50    1.31   31.92"
+##set hp("0-0")   "  0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00"
+
+### now you must read the par files and load up an equivalent array of def values
+set fp [open $par "r" ]
+set fn [open $sequence "r" ]
+set seq [lrange [gets $fn] 0 end ]
+set nseq [string length $seq ]
+## skip the 3 par file headers
+set  nrecs [lindex [gets $fp ]  0 ]
+set line [gets $fp ]
+set headers [gets $fp ]
+for { set bp 0 } { $bp < $nrecs } { incr bp } {
+        set tmp [gets $fp ]
+        set defintra($bp)  [lrange $tmp  1 6 ]
+        set definter($bp)  [lrange $tmp  7 end]
+        set def($bp) [lrange $tmp 1 end]
+       ### puts "DEF: $def($bp) "
+    }
+
+set index 1
+set bpi [string range $seq 0 0 ]
+#### fix above
+#set name "0-0"
+####puts $name
+###puts "$bpi-$comp  $hp("$name")  "
+set parfn [open "hp.par" w]
+        puts $parfn [format "%10d #base-pairs"  $nseq ]
+        puts $parfn "   0 # ***local base-pair & step parameters*** "
+        puts $parfn "#      Shear  Stretch  Stagger Buckle Prop-Tw Opening  Shift   Slide   Rise   Tilt     Roll   Twist "
+
+while {$index <= [string length $seq ] } {
+###        puts "$index: $bpi-$bppp" 
+        set comp  [comp $bpi ]
+        set bppp [string range $seq $index $index ]
+        set pindex [expr $index-1]
+        ##set bpm [string range $seq $pindex $pindex]
+        ##set compm [comp $bpm]
+        
+        set cnt 0
+        while {$cnt < [expr $nrecs -1] } {
+          puts -nonewline $parfn  "$bpi-$comp"
+ ## begin loop over 12
+          for { set col 0} {$col < 12 } { incr col } {
+                puts -nonewline $parfn  [format "%8.2f" [lindex $def($cnt) $col ]]
+                }
+          incr cnt
+          incr index
+          set bpi $bppp
+          set bppp [string range $seq $index $index ]
+          set comp  [comp $bpi ]
+          puts $parfn  " "
+          }
+        puts -nonewline $parfn "$bpi-$comp"
+        for { set col 0} {$col < 12 } { incr col } {
+              puts -nonewline $parfn [format "%8.2f" [lindex $def([expr $nrecs-1]) $col ]]
+              }
+        puts $parfn " "
+        incr index
+        }
+     close $parfn
+puts "****************************"
+puts "     Finish seq2par         "
+puts "     Created hp.par         "
+puts "****************************"
+}
+
+
+
+proc par2pdb { parfn pdbfn } {
+### DONE TcB and verified Aug 26, 2015
+## converts a par file into an all atom model using 3DNA
+
+puts "****************************"
+puts "     starting par2pdb      "
+puts "****************************"
+
+set X3DNA "/usr/local/X3DNA"
+set ::env(X3DNA) "$X3DNA"
+set REBUILD "$X3DNA/bin/rebuild"
+set COMMAND "$REBUILD -atomic $parfn $pdbfn  " 
+puts "executing: $COMMAND"
+set 3dnaoutput [ exec  $REBUILD -atomic $parfn $pdbfn 2> /dev/null ]
+return "created $pdbfn"
+
+puts "****************************"
+puts "     Finish par2pdb         "
+puts "     Created nuc.pdb        "
+puts "****************************"
+}
+ 
+ 
+proc fitchrom2nuc { pdbfn nucmol chrommol } {
+### DONE TcB Aug 26, 2015 but not robust
+###      there are assumptions about ordering of P atoms that should be validated
+##    fits all of nuc  onto chrom using the "P" atoms starting at position pos in chrom
+### so the chrom mol must be longer than the nucmol
+
+puts "****************************"
+puts "     starting fitchrom2nuc  "
+puts "****************************"
+
+mol new $pdbfn type {pdb} first 0 last -1 step 1 waitfor all
+set chromPsel  [atomselect $chrommol "name P" ]
+set chromPnum [$chromPsel num]
+set chromPindex [$chromPsel get index]
+
+#set chromWsel [atomselect $chrommol "name P and nfrag 0 " ]
+#set chromCsel [atomselect $chrommol "name P and nfrag 1 " ]
+#set chromWnum [$chromWsel num]
+#set chromCnum [$chromCsel num]
+
+set nucPsel  [atomselect $nucmol "name P"]
+set nucPnum  [$nucPsel num]
+set nucPindex [$nucPsel get index ]
+set nucPnum2 [expr $nucPnum / 2 ]
+set nucPid    [lsort -uniq -integer [$nucPsel get residue] ]
+set nPres [lrange $nucPid 0 0]
+
+set nfrag [atomselect $nucmol "nfrag 0"]
+set nucid [lsort -uniq -integer [$nfrag get residue] ]
+set nres [lrange $nucid 0 0]
+
+
+set startid 1
+
+set W1 $startid
+set W2 [expr $W1 + $nucPnum2 -1 ]
+set C2 [expr $chromPnum - $W1 ]
+set C1 [expr $C2 - $nucPnum2 + 1   ]
+ 
+
+set Windex [lrange $chromPindex $W1 $W2]
+set Windex [ concat $Windex [lrange $chromPindex $C1 $C2 ]]
+set Psel [atomselect $chrommol "index $Windex " ]
+
+set Pnum  [$Psel num ]
+
+if {$Pnum != $nucPnum } {
+	puts " something went wrong "  
+	puts "Mol $nucmol has $nucPnum phosphates  "
+	puts "Mol $chrommol has $chromPnum phosphates with $Pnum selected "
+        puts "not fitting "
+        sleep 5
+        quit
+}
+
+set all [atomselect $chrommol "all" ]
+ 
+$all move [measure fit $Psel $nucPsel ]
+display resetview
+
+puts [measure rmsd $Psel $nucPsel ]
+###now we save the pdb files for nucleic
+set nuc [atomselect $chrommol " nucleic " ]
+set nlist [lsort -unique [ $nuc get nfrag ]  ]
+foreach  frag $nlist {
+  set thisfrag [atomselect $chrommol "nfrag $frag and not hydrogen " ]
+  $thisfrag writepdb n.$frag.pdb
+  }
+
+##set nucW [atomselect $chrommol "segname W and not hydrogen"]
+##set nucC [atomselect $chrommol "segname C and not hydrogen"]
+##$nucW writepdb n.w.pdb
+##$nucC writepdb n.c.pdb
+  
+###save pdb for 177 bp of DNA sequece for further usage
+
+
+###delete the extra P atoms
+puts "Deleting extra P atoms"
+exec awk { {if (substr($0,22,1) == "A" ) {cntA ++; if ((cntA < 10 ) && ($3 ~/P/)) {tmp} else { print $0 > "n.0.pdb" } } } } n.0.pdb
+exec awk { {if (substr($0,22,1) == "B" ) {cntA ++; if ((cntB < 10 ) && ($3 ~/P/)) {tmp} else { print $0 > "n.1.pdb" } } } } n.1.pdb
+
+puts "****************************"
+puts "     Finish fitchrom2nuc    "
+puts "****************************"
+}
+
+
+
+proc separate { molid } {
+###Update Oct 13, 2015
+### DONE TcB and verified Aug 26, 2015
+### separates the current mol info individual pdb files
+##3 using n.##.pdb for nucleic fragments and p.###.pdb for protein fragments
+## and returns a list of the pdb file names
+puts "****************************"
+puts "     starting separate      "
+puts "****************************"
+set pro [atomselect $molid " protein " ]
+##set plist [lsort -unique [ $pro get pfrag ]  ]
+
+set plist [lsort -unique [ $pro get segname ]  ]
+
+foreach  frag $plist {
+  set thisfrag [atomselect $molid "segname $frag and not hydrogen " ]
+  $thisfrag writepdb p.$frag.pdb
+  }
+return 
+puts "****************************"
+puts "     Finish separate         "
+puts "****************************"
+ }
+
+
+proc runtleap {  } {
+##   takes alist of pdb files for protein and nucleic  and uses ambers tleap to 
+### make a completely solvated system 
+## the set of nucfiles should contain only two file names
+### boxdim is the size of the solvent box in x,y,z dimensions
+### enought K+/Cl- ions are added to neutralize the system and provide a bulk
+## solvent concentration of conc = 150mM  ~ 1 ion pair for every 11,000 A^3 
+###    assuming 55/.150 and 30A^3/H20
+
+puts "****************************"
+puts "     starting runtleap      "
+puts "****************************"
+
+set BASEDIR [pwd]
+set tleapfn "tleap.in"
+set fp [open $tleapfn "w" ]
+set map1 { "C1"  "C" "sp2" }
+set map2 { "C2"  "C" "sp2" }
+set map3 { "OP1" "O1P" }
+set map4 { "OP2" "O2P" }
+set map5 { 0 "G" "DG5"  }
+set map6 { 1 "G" "DG3"  }
+set map7 { "G" "DG" }
+set map8 { 0 "A" "DA5"  }
+set map9 { 1 "A" "DA3"  }
+set map10 { "A" "DA" }
+set map11 { 0 "C" "DC5"  }
+set map12 { 1 "C" "DC3"  }
+set map13 { "C" "DC" }
+set map14 { 0 "T" "DT5"  }
+set map15 { 1 "T" "DT3"  }
+set map16 { "T" "DT" }
+puts $fp "verbosity 0
+logfile sys.leap.log
+
+WAT = SPC
+source leaprc.ff14SB
+## loads standard force field for protein,DNA
+##  Amber14 recommends
+###  ff99 + bsc0 + ε/ζ OL1 + χ OL4
+
+### ### leaprc.ff4SB loads following
+#loadamberparams frcmod.ff14SB
+#loadamberparams frcmod.parmbsc0
+
+
+loadamberparms frcmod.spce
+### modifications for spce water
+
+loadamberparams frcmod.ionsjc_spce
+### ion modifications for use with spce water
+
+## following is from supplimental from
+### http://pubs.acs.org/doi/suppl/10.1021/ct300275s
+###  Reference Simulations of Noncanonical Nucleic Acids with 
+###   Different χ Variants of the AMBER Force Field: Quadruplex DNA, Quadruplex RNA, and Z-DNA
+
+addAtomTypes {
+        {$map1}
+        {$map2}
+}
+
+addPdbAtomMap {
+       {$map3}
+       {$map4}
+}
+
+addPdbResMap {
+  {$map5} {$map6}  {$map7}
+  {$map8} {$map9}  {$map10}
+  {$map11} {$map12} {$map13}
+  {$map14} {$map15} {$map16}
+}
+
+loadamberprep /simulations/rsu007/simulation/utils/all_nuc94bsc0_chiOL4.in
+ol4 = loadamberparams /simulations/rsu007/simulation/utils/frcmod.OL4.chi
+
+
+
+H31 = loadpdb p.H31.pdb
+H41 = loadpdb p.H41.pdb
+H2A1 = loadpdb p.H2A1.pdb
+H2B1 = loadpdb p.H2B1.pdb
+H32 = loadpdb p.H32.pdb
+H42 = loadpdb p.H42.pdb
+H2A2 = loadpdb p.H2A2.pdb
+H2B2 = loadpdb p.H2B2.pdb
+C = loadpdb n.1.pdb
+W = loadpdb n.0.pdb
+MDSYS = combine { H31 H41 H2A1 H2B1 H32 H42 H2A2 H2B2 C W }
+##PRO = combine { A B C D E F G H }
+##NUC = combine {I J}
+##alignAxes MDSYS
+saveAmberParm MDSYS vac.parm vac.crd
+savePDB   MDSYS  vac.pdb
+### still need solvate and add ions
+##solvatebox MDSYS  SPCBOX 
+##addionsRand MDSYS K+ 0
+##addionsRand MDSYS Cl- 0
+#saveAmberParm MDSYS sol.parm sol.crd
+#savePDB   MDSYS  sol.pdb
+##addionsRand MDSYS K+ 210 Cl- 210
+
+### for 3,000,000A^3 there should be about that * (.150/55.5 * 1/30) = 270 ion pairs assuming 
+###  and conversion 30^3 per water
+### taking bulk water as not w/in 5A of pro-DNa and there are about 73,000 waters
+###  with 73,000 * .150/55.5 = 197 ion pairs
+
+##saveAmberparm MDSYS sys.parm sys.crd
+##savePDB   MDSYS  sys.pdb
+"
+close $fp
+set ::env(AMBERHOME) "/usr/local/amber/amber14"
+exec /usr/local/amber/amber14/bin/tleap  -s -f tleap.in
+
+return 
+puts "***************************************"
+puts "             Finish runtleap           "
+puts "     Thank you for using dsdnadock.vmd "
+puts "***************************************"
+}
+
+
+
