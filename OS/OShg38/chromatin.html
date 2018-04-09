@@ -1,0 +1,23 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+
+<script type="text/javascript" src="../../jquery-1.10.2.min.js"></script>
+<script type="text/javascript" src="../../d3.min.js"></script>
+<script type="text/javascript" src="../../icmdat.js"></script>
+<script type="text/javascript" src="../../nuc-widget.js"></script>
+<script src="http://dna.engr.latech.edu/icm-du/jmol/Jmol.js" type="text/javascript">
+</script>
+<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">
+<title>Chromatin Folding</title>
+</head>
+<body>
+<script>
+jmolInitialize("http://dna.engr.latech.edu/icm-du/jmol"); // REQUIRED
+jmolApplet(["100%","90%"], value = "load tmpdata/icm.occ.xyz; spin off; script ../../SRC/jsmol/nuc-cores.txt");
+jmolBr(); // a button
+//jmolButton("reset", "Reset to original orientation");
+</script>
+
+</body>
+</html>

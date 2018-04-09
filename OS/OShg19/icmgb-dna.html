@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+<head>
+<title>ICM-Web Controls</title>    
+<link type="text/css" rel="stylesheet" href="../../SRC/css/icmstyle.css"/>
+<script type="text/javascript" src="../../SRC/javascript/jquery-1.10.2.min.js"></script>
+<script type="text/javascript" src="../../SRC/javascript/d3.min.js"></script>
+<script type="text/javascript" src="../../SRC/javascript/icmdat.js"></script>
+<script type="text/javascript" src="../../SRC/javascript/nuc-widget.js"></script>
+<script language="javascript" src="http://www.biodalliance.org/release-0.13/dalliance-compiled.js"></script>
+<script src="../jmol-13.0.18/Jmol.js" type="text/javascript"></script>
+<script src="tracks.js" type="text/javascript"></script>
+<script src="view.js" type="text/javascript"></script>
+</head>
+<body>
+
+<div class="bar">
+  <div class = "dropdown">
+  <button class = "dropbtn">Human</button>
+  <div class = "dropdown-content">
+  		<a id="sessionhg19">hg19</a>
+  		<a id="sessionhg38">hg38</a>
+  </div>   
+  </div>
+
+  <div class = "dropdown">
+  <button class = "dropbtn">Yeast</button>
+  <div class = "dropdown-content">
+  		<a id="sessionsacCer3">sacCer3</a>
+  </div> 
+  </div>
+  
+  
+</div>
+<div class="container">
+  <div id="dalliance-1"></div>
+  <div id="svgoverlay"></div>
+  <div id="nucwidget"></div>
+  <button id="color">color</button>
+  <label for="col">
+  <div class="tooltip">c:
+  <span class="tooltiptext">color to use</span>
+  </div>
+  </label>
+  <select id="col"></select> 
+  <button id="trackcolor">trackcolor</button>
+  <!--button id="trackcolorold">trackcolorold</button-->
+  <!--iframe marginWidth=50 name="c" id="c" src="chromatinnuc.html" frameBorder="50" width="960" scrolling="no" height="200"></iframe-->
+</div>
+<div class="controls">
+	<!--h4>Sequence info:</h4-->
+  <label for="selectregion">Model Coords:</label>
+  chr:<input type="text" name="chr" id="chr" style="width:30px;" value="22"> 
+  start:<input type="text" name="min" id="min" style="width:100px;" value="30,014,247">
+  end:<input type="text" name="max" id="max" style="width:100px;" value="30,015,736">
+  length:<input type="text" name="size" id="size" style="width:60px;" value="1489">
+  <button id="minimize" style="float:right;">Minimize</button>
+  <button id="allatom" style="float:right;">All Atom</button>
+  
+  <div><h4 style="float:left;">Nucleosomes:</h4><h4 style="float:right;">Chromatin:</h4><div style="clear:both;"></div></div>
+  <button id="addleft">+Left</button>
+  <button id="delete">Delete</button>
+  <button id="addright">+Right</button>
+  <label for="Xnuc">
+  <div class="tooltip">Type:
+  <span class="tooltiptext">Type of nucleosomes</span>
+  </div>
+  </label>
+  <select id="Xnuc"></select>
+  <label for="Temp">
+  <div class="tooltip">T:
+  <span class="tooltiptext">Temperature in K</span>
+  </div>
+  </label>
+  <select id="Temp"></select> 
+  
+  <div class="dropdown" style="float:right;">
+  <button onclick="myFunction()" class="dropbtn" style="float:right;">Position</button>
+  <div id="myDropdown" class="dropdown-content">
+    <a id="sendnucpos">use position of nuc-widget</a>
+    <a id="gettrack">use position of tracks</a>
+  </div>
+  </div> 
+  <!--button id="sendnucpos" style="float:right;">Positions</button-->
+  <!--button id="gettrack" style="float:right;">gettrack</button-->
+  <button id="senduni" style="float:right;">Uniform</button>
+  <button id="senddefault" style="float:right;">Auto</button>
+  <!--button id="freedna" style="float:right;">FreeDNA</button-->
+  <div class="dropdown" style="float:right;">
+  <button onclick="myFunction()" class="dropbtn" style="float:right;">FreeDNA</button>
+  <div id="myDropdown" class="dropdown-content">
+    <a id="freedna">one frame</a>
+    <a id="freednam">10 frames</a>
+  </div>
+  </div> 
+  <form name="uniinput" style="float:right">
+  <label for="Phi">
+  <div class="tooltip">Φ:
+  <span class="tooltiptext">Phase shift for uniform positioning</span>
+  </div>
+  </label>
+  <input type="text" name="Phi" id="Phi" style="width:30px;" value="0"> 
+  <label for="Lk">
+  <div class="tooltip">Lk:
+  <span class="tooltiptext">Minimum Linker Length</span>
+  </div>
+  </label>
+  <input type="text" name="Lk" id="Lk" style="width:30px;" value="19"> 
+  </form>
+  <!--h4>Simulating</h4-->
+  <!--button id="minimize">Minimize</button-->
+</div>
+
+<script type="text/javascript" src="../../SRC/javascript/icm-dna.js"></script>
+</body>
+</html>
+
